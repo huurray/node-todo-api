@@ -1,58 +1,42 @@
-var mongoose = require('mongoose')
+const express = require('express')
+const bodyParser = require('body-parser')
 
-mongoose.Promise = global.Promise
-mongoose.connect('mongodb://localhost:27017/TodoApp')
+const { mongoose } = require('./db/mongoose')
+const { Todo } = require('./models/todo')
+const { User } = require('./models/user')
 
-var Todo = mongoose.model('Todo', {
-  text: {
-    type: String,
-    required: true,
-    minlength: 1,
-    trim: true
-  },
-  completed: {
-    type: Boolean,
-    default: false
-  },
-  completedAt: {
-    type: Number,
-    default: null
-  }
+const app = express()
+
+app.use(bodyParser.json())
+
+app.post('/todos', (req, res) => {
+  var todo = new Todo({
+    text: req.body.text
+  })
+
+  todo.save().then(
+    doc => {
+      res.send(doc)
+    },
+    e => {
+      res.status(400).send(e)
+    }
+  )
 })
 
-var newTodo = new Todo({
-  text: '  Edit this video  ',
-  completed: true,
-  completedAt: 123
+app.get('/todos', (req, res) => {
+  Todo.find().then(
+    todos => {
+      res.send({ todos })
+    },
+    e => {
+      res.status(400).send(e)
+    }
+  )
 })
 
-newTodo.save().then(
-  result => {
-    console.log(result)
-  },
-  err => {
-    console.log(err)
-  }
-)
-
-var User = mongoose.model('User', {
-  email: {
-    type: String,
-    required: true,
-    minlength: 1,
-    trim: true
-  }
+app.listen(3000, () => {
+  console.log('started on port 3000')
 })
 
-var newUser = new User({
-  email: 'huurray@gmail.com'
-})
-
-newUser.save().then(
-  result => {
-    console.log(result)
-  },
-  err => {
-    console.log(err)
-  }
-)
+module.exports = { app }
